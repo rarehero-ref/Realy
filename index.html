@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skelet Kapalak Animatsiyasi</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #d7d7d7; /* Oqish kulrang fon */
+            cursor: crosshair;
+        }
+        .main-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, #e0e0e0 0%, #c0c0c0 100%);
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <svg id="canvas"></svg>
+    </div>
+
+    <script>
+        const svg = document.getElementById('canvas');
+        const namespace = "http://www.w3.org/2000/svg";
+
+        let mouse = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2
+        };
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = event.clientX;
+            mouse.y = event.clientY;
+        });
+        
+        window.addEventListener('mouseout', () => {
+             mouse.x = window.innerWidth / 2;
+             mouse.y = window.innerHeight / 2;
+        });
+
+        const segmentCount = 25; // Umurtqa sonini ko'paytirish
+        const segmentLength = 8;  // Umurtqalarni yaqinlashtirish
+        const segments = [];
+        const wingSegmentIndex = 4;
+
+        let leftWing;
+        let rightWing;
+
+        // Bosh suyagini yaratish
+        const head = document.createElementNS(namespace, 'ellipse');
+        head.setAttribute('rx', 12);
+        head.setAttribute('ry', 8);
+        head.setAttribute('fill', '#1a1a1a');
+        head.setAttribute('stroke', '#f0f0f0');
+        head.setAttribute('stroke-width', '1.5');
+        svg.appendChild(head);
+        segments.push({
+            element: head,
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            angle: 0
+        });
+
+        // Umurtqalarni yaratish
+        for (let i = 1; i < segmentCount; i++) {
+            const segment = document.createElementNS(namespace, 'ellipse');
+            const radiusX = 6 - i * 0.15;
+            const radiusY = 4 - i * 0.1;
+            segment.setAttribute('rx', radiusX > 1 ? radiusX : 1);
+            segment.setAttribute('ry', radiusY > 1 ? radiusY : 1);
+            segment.setAttribute('fill', '#2a2a2a');
+            segment.setAttribute('stroke', '#e0e0e0');
+            segment.setAttribute('stroke-width', '1');
+            svg.appendChild(segment);
+
+            segments.push({
+                element: segment,
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2,
+                angle: 0
+            });
+        }
+        
+        // Skelet qanotlarni yaratish
+        leftWing = document.createElementNS(namespace, 'path');
+        rightWing = document.createElementNS(namespace, 'path');
+        
+        leftWing.setAttribute('fill', 'none');
+        leftWing.setAttribute('stroke', '#222');
+        leftWing.setAttribute('stroke-width', '2');
+        leftWing.setAttribute('stroke-linecap', 'round');
+
+        rightWing.setAttribute('fill', 'none');
+        rightWing.setAttribute('stroke', '#222');
+        rightWing.setAttribute('stroke-width', '2');
+        rightWing.setAttribute('stroke-linecap', 'round');
+        
+        // Qanotlarni umurtqalar orqasiga joylashtirish
+        svg.insertBefore(leftWing, head);
+        svg.insertBefore(rightWing, head);
+        
+        let frame = 0;
+
+        function animate() {
+            frame++;
+            const headSegment = segments[0];
+
+            // Harakatni sekinlashtirish uchun 'ease' qiymatini pasaytirish
+            const ease = 0.04; 
+            const dx = mouse.x - headSegment.x;
+            const dy = mouse.y - headSegment.y;
+            
+            headSegment.angle = Math.atan2(dy, dx);
+            headSegment.x += dx * ease;
+            headSegment.y += dy * ease;
+
+            for (let i = 1; i < segmentCount; i++) {
+                const prevSegment = segments[i - 1];
+                const currentSegment = segments[i];
+                const segmentDx = prevSegment.x - currentSegment.x;
+                const segmentDy = prevSegment.y - currentSegment.y;
+                const dist = Math.sqrt(segmentDx * segmentDx + segmentDy * segmentDy);
+
+                if (dist > segmentLength) {
+                    const angle = Math.atan2(segmentDy, segmentDx);
+                    currentSegment.angle = angle;
+                    currentSegment.x = prevSegment.x - Math.cos(angle) * segmentLength;
+                    currentSegment.y = prevSegment.y - Math.sin(angle) * segmentLength;
+                }
+            }
+
+            segments.forEach(seg => {
+                const angleDeg = seg.angle * 180 / Math.PI;
+                seg.element.setAttribute('transform', `translate(${seg.x}, ${seg.y}) rotate(${angleDeg})`);
+            });
+
+            // Qanotlar harakati va pozitsiyasi
+            const wingParent = segments[wingSegmentIndex];
+            const wingAngle = wingParent.angle;
+            const wingAngleDeg = wingAngle * 180 / Math.PI;
+            
+            // Qanotlar "pirpirash" tezligini sekinlashtirish
+            const flap = Math.sin(frame * 0.15) * 40 + 20; 
+            const wingSize = 80;
+
+            // Skelet qanot chizish funksiyasi
+            const wingPath = (size, flap) => {
+                let path = '';
+                const ribs = 5; // Qanot suyaklari soni
+                for (let i = 1; i <= ribs; i++) {
+                    const angle = (i / ribs) * 1.6 + 0.2; 
+                    const length = size * (1.2 - (i / ribs) * 0.6); 
+                    const curve = flap * (i / ribs) * 0.8;
+
+                    const endX = -Math.cos(angle) * length;
+                    const endY = -Math.sin(angle) * length;
+
+                    const ctrlX = -Math.cos(angle - 0.3) * (length / 1.5);
+                    const ctrlY = -Math.sin(angle - 0.3) * (length / 1.5) - curve;
+
+                    path += `M 0 0 Q ${ctrlX} ${ctrlY}, ${endX} ${endY} `;
+                }
+                return path;
+            };
+
+            leftWing.setAttribute('d', wingPath(wingSize, flap));
+            rightWing.setAttribute('d', wingPath(wingSize, flap));
+
+            const transformLeft = `translate(${wingParent.x}, ${wingParent.y}) rotate(${wingAngleDeg}) scale(1, 1)`;
+            const transformRight = `translate(${wingParent.x}, ${wingParent.y}) rotate(${wingAngleDeg}) scale(1, -1)`;
+
+            leftWing.setAttribute('transform', transformLeft);
+            rightWing.setAttribute('transform', transformRight);
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+
+</body>
+</html>
+
+
