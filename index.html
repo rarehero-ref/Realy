@@ -3,323 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Media Asboblari</title>
+    <title>Matnni Ovozli O'qish (TTS)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-        body { font-family: 'Roboto', sans-serif; }
-        .tab-active { border-bottom: 3px solid #3b82f6; color: #1d4ed8; background-color: #eff6ff; }
-        .drag-area.active { border: 2px solid #3b82f6; background-color: #eff6ff; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        
+        /* Slider dizayni */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            margin-top: -6px; 
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
         
         <!-- Header -->
-        <header class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white text-center">
-            <h1 class="text-3xl font-bold mb-2"><i class="fas fa-tools mr-2"></i>Universal Media Asboblari</h1>
-            <p class="opacity-90">Rasm konvertatsiya qilish va Matn tahlili – Barchasi bittada</p>
+        <header class="bg-indigo-600 p-6 text-white flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold"><i class="fas fa-bullhorn mr-2"></i>Matnni Ovozlantirish</h1>
+                <p class="text-indigo-200 text-sm">Yozing va tinglang</p>
+            </div>
+            <div id="status-icon" class="hidden animate-pulse">
+                <i class="fas fa-wave-square text-2xl"></i>
+            </div>
         </header>
 
-        <!-- Tabs -->
-        <div class="flex border-b">
-            <button onclick="switchTab('image')" id="tab-image" class="w-1/2 py-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition tab-active">
-                <i class="fas fa-image mr-2"></i>Rasm Konverter (JPG/PNG)
-            </button>
-            <button onclick="switchTab('text')" id="tab-text" class="w-1/2 py-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition">
-                <i class="fas fa-file-alt mr-2"></i>Matn Muharriri
-            </button>
-        </div>
-
-        <!-- Content Area -->
-        <div class="p-6 md:p-8">
-
-            <!-- IMAGE CONVERTER SECTION -->
-            <div id="image-section" class="space-y-6">
-                <div class="text-center space-y-2">
-                    <h2 class="text-xl font-bold text-gray-800">Rasm formatini o'zgartirish</h2>
-                    <p class="text-gray-500 text-sm">JPG, PNG, WEBP formatlari o'rtasida konvertatsiya qiling</p>
-                </div>
-
-                <!-- Drag & Drop Area -->
-                <div id="drag-area" class="drag-area border-2 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer transition hover:bg-gray-50" onclick="document.getElementById('file-input').click()">
-                    <input type="file" id="file-input" class="hidden" accept="image/*">
-                    <div id="upload-content">
-                        <i class="fas fa-cloud-upload-alt text-5xl text-blue-400 mb-3"></i>
-                        <p class="text-lg font-medium text-gray-700">Rasmni tanlang yoki shu yerga tashlang</p>
-                        <p class="text-xs text-gray-400 mt-1">Maksimal hajmi: 10MB</p>
-                    </div>
-                    <div id="preview-container" class="hidden">
-                        <img id="image-preview" class="max-h-64 mx-auto rounded-lg shadow-md mb-4" src="" alt="Preview">
-                        <p id="file-name" class="text-sm font-semibold text-gray-700"></p>
-                        <p id="file-size" class="text-xs text-gray-500"></p>
-                        <button onclick="resetImage(event)" class="mt-3 text-red-500 hover:text-red-700 text-sm font-medium underline">Boshqa rasm tanlash</button>
-                    </div>
-                </div>
-
-                <!-- Controls -->
-                <div id="controls" class="hidden bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-                        <div class="w-full md:w-1/2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Qaysi formatga o'tkazasiz?</label>
-                            <select id="format-select" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <option value="image/jpeg">JPG (JPEG)</option>
-                                <option value="image/png">PNG (Shaffof fon uchun)</option>
-                                <option value="image/webp">WEBP (Web uchun)</option>
-                            </select>
-                        </div>
-                        <div class="w-full md:w-1/2">
-                            <button onclick="convertAndDownload()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow transition transform hover:scale-[1.02]">
-                                <i class="fas fa-download mr-2"></i>Konvertatsiya va Yuklash
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <!-- Hidden Canvas for Processing -->
-                <canvas id="canvas" class="hidden"></canvas>
+        <div class="p-6 md:p-8 space-y-6">
+            
+            <!-- Ovoz Tanlash Qismi -->
+            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                <label class="block text-sm font-bold text-gray-700 mb-2">
+                    <i class="fas fa-user-astronaut mr-1"></i> Ovoz egasini tanlang:
+                </label>
+                <select id="voice-select" class="w-full p-3 border border-indigo-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
+                    <option value="" disabled selected>Ovozlar yuklanmoqda...</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle"></i> Agar ro'yxat bo'sh bo'lsa, biroz kuting yoki sahifani yangilang.
+                </p>
             </div>
 
+            <!-- Matn Kiritish -->
+            <div>
+                <textarea id="text-input" class="w-full h-40 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-lg text-gray-700" placeholder="Matnni shu yerga yozing... Masalan: Assalomu alaykum, ishlaringiz yaxshimi?"></textarea>
+            </div>
 
-            <!-- TEXT TOOLS SECTION -->
-            <div id="text-section" class="hidden space-y-6">
-                <div class="flex justify-between items-end">
-                    <h2 class="text-xl font-bold text-gray-800">Matn Tahlili</h2>
-                    <div class="flex gap-2">
-                         <button onclick="copyText()" class="text-gray-500 hover:text-blue-600 text-sm bg-gray-100 px-3 py-1 rounded"><i class="fas fa-copy mr-1"></i>Nusxa olish</button>
-                         <button onclick="clearText()" class="text-gray-500 hover:text-red-600 text-sm bg-gray-100 px-3 py-1 rounded"><i class="fas fa-trash mr-1"></i>Tozalash</button>
-                    </div>
+            <!-- Sozlamalar (Tezlik va Ton) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="flex justify-between text-sm font-semibold text-gray-600 mb-2">
+                        <span>Tezlik (Rate)</span>
+                        <span id="rate-value" class="text-indigo-600">1</span>
+                    </label>
+                    <input type="range" id="rate" min="0.5" max="2" value="1" step="0.1">
                 </div>
-
-                <textarea id="text-input" class="w-full h-48 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none" placeholder="Matnni shu yerga yozing yoki joylang..."></textarea>
-
-                <!-- Statistics -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-blue-50 p-3 rounded-lg text-center border border-blue-100">
-                        <span id="char-count" class="block text-2xl font-bold text-blue-600">0</span>
-                        <span class="text-xs text-gray-500 uppercase font-semibold">Belgilar</span>
-                    </div>
-                    <div class="bg-green-50 p-3 rounded-lg text-center border border-green-100">
-                        <span id="word-count" class="block text-2xl font-bold text-green-600">0</span>
-                        <span class="text-xs text-gray-500 uppercase font-semibold">So'zlar</span>
-                    </div>
-                    <div class="bg-purple-50 p-3 rounded-lg text-center border border-purple-100">
-                        <span id="sentence-count" class="block text-2xl font-bold text-purple-600">0</span>
-                        <span class="text-xs text-gray-500 uppercase font-semibold">Gaplar</span>
-                    </div>
-                    <div class="bg-orange-50 p-3 rounded-lg text-center border border-orange-100">
-                        <span id="reading-time" class="block text-2xl font-bold text-orange-600">0</span>
-                        <span class="text-xs text-gray-500 uppercase font-semibold">Sekund o'qish</span>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4 border-t">
-                    <button onclick="textToSpeech()" class="bg-gray-800 text-white p-3 rounded-lg hover:bg-gray-900 transition flex items-center justify-center gap-2">
-                        <i class="fas fa-volume-up"></i> Ovozli o'qish
-                    </button>
-                    <button onclick="toUpperCase()" class="bg-white border border-gray-300 text-gray-700 p-3 rounded-lg hover:bg-gray-50 transition font-bold">
-                        AA (KATTA)
-                    </button>
-                    <button onclick="toLowerCase()" class="bg-white border border-gray-300 text-gray-700 p-3 rounded-lg hover:bg-gray-50 transition lowercase font-bold">
-                        aa (kichik)
-                    </button>
+                <div>
+                    <label class="flex justify-between text-sm font-semibold text-gray-600 mb-2">
+                        <span>Ovoz Toni (Pitch)</span>
+                        <span id="pitch-value" class="text-indigo-600">1</span>
+                    </label>
+                    <input type="range" id="pitch" min="0" max="2" value="1" step="0.1">
                 </div>
             </div>
 
+            <!-- Boshqaruv Tugmalari -->
+            <div class="flex gap-4 pt-4 border-t border-gray-100">
+                <button id="speak-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform hover:scale-[1.02] flex justify-center items-center gap-2">
+                    <i class="fas fa-play"></i> O'qish
+                </button>
+                
+                <button id="pause-btn" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform hover:scale-[1.02] flex justify-center items-center gap-2">
+                    <i class="fas fa-pause"></i> Pauza
+                </button>
+
+                <button id="stop-btn" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform hover:scale-[1.02] flex justify-center items-center gap-2">
+                    <i class="fas fa-stop"></i> To'xtatish
+                </button>
+            </div>
         </div>
+
+        <footer class="bg-gray-50 p-4 text-center text-xs text-gray-400">
+            &copy; 2025 Web Speech API
+        </footer>
     </div>
 
     <script>
-        // --- TAB SWITCHING ---
-        function switchTab(tab) {
-            const imgSec = document.getElementById('image-section');
-            const txtSec = document.getElementById('text-section');
-            const imgTab = document.getElementById('tab-image');
-            const txtTab = document.getElementById('tab-text');
-
-            if (tab === 'image') {
-                imgSec.classList.remove('hidden');
-                txtSec.classList.add('hidden');
-                imgTab.classList.add('tab-active');
-                txtTab.classList.remove('tab-active');
-            } else {
-                imgSec.classList.add('hidden');
-                txtSec.classList.remove('hidden');
-                imgTab.classList.remove('tab-active');
-                txtTab.classList.add('tab-active');
-            }
-        }
-
-        // --- IMAGE CONVERTER LOGIC ---
-        const dropArea = document.getElementById('drag-area');
-        const fileInput = document.getElementById('file-input');
-        const uploadContent = document.getElementById('upload-content');
-        const previewContainer = document.getElementById('preview-container');
-        const imagePreview = document.getElementById('image-preview');
-        const fileName = document.getElementById('file-name');
-        const fileSize = document.getElementById('file-size');
-        const controls = document.getElementById('controls');
-        let currentImageFile = null;
-
-        // Drag & Drop events
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => dropArea.classList.add('active'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => dropArea.classList.remove('active'), false);
-        });
-
-        dropArea.addEventListener('drop', handleDrop, false);
-        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-
-        function handleFiles(files) {
-            if (files.length > 0) {
-                const file = files[0];
-                if (!file.type.startsWith('image/')) {
-                    alert("Iltimos, faqat rasm yuklang!");
-                    return;
-                }
-                currentImageFile = file;
-                previewImage(file);
-            }
-        }
-
-        function previewImage(file) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onloadend = function() {
-                imagePreview.src = reader.result;
-                fileName.textContent = file.name;
-                fileSize.textContent = (file.size / 1024).toFixed(2) + ' KB';
-                uploadContent.classList.add('hidden');
-                previewContainer.classList.remove('hidden');
-                controls.classList.remove('hidden');
-            }
-        }
-
-        function resetImage(e) {
-            e.stopPropagation();
-            fileInput.value = '';
-            currentImageFile = null;
-            uploadContent.classList.remove('hidden');
-            previewContainer.classList.add('hidden');
-            controls.classList.add('hidden');
-        }
-
-        function convertAndDownload() {
-            if (!currentImageFile) return;
-
-            const format = document.getElementById('format-select').value;
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-
-            img.onload = function() {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                // Oq fon qo'shish (PNG dan JPG ga o'tkazganda qora fon bo'lmasligi uchun)
-                if (format === 'image/jpeg') {
-                    ctx.fillStyle = "#FFFFFF";
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                }
-                ctx.drawImage(img, 0, 0);
-
-                const dataURL = canvas.toDataURL(format, 0.9); // 0.9 sifat
-                const link = document.createElement('a');
-                
-                // Yangi fayl nomini yasash
-                const originalName = currentImageFile.name.split('.')[0];
-                const ext = format.split('/')[1];
-                link.download = `${originalName}_converted.${ext}`;
-                
-                link.href = dataURL;
-                link.click();
-            }
-            img.src = imagePreview.src;
-        }
-
-        // --- TEXT TOOLS LOGIC ---
+        // Elementlarni olish
+        const synth = window.speechSynthesis;
         const textInput = document.getElementById('text-input');
-        const charCount = document.getElementById('char-count');
-        const wordCount = document.getElementById('word-count');
-        const sentenceCount = document.getElementById('sentence-count');
-        const readingTime = document.getElementById('reading-time');
+        const voiceSelect = document.getElementById('voice-select');
+        const rate = document.getElementById('rate');
+        const rateValue = document.getElementById('rate-value');
+        const pitch = document.getElementById('pitch');
+        const pitchValue = document.getElementById('pitch-value');
+        const speakBtn = document.getElementById('speak-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const statusIcon = document.getElementById('status-icon');
 
-        textInput.addEventListener('input', updateStats);
+        let voices = [];
 
-        function updateStats() {
-            const text = textInput.value;
+        // Ovozlar ro'yxatini olish funksiyasi
+        function getVoices() {
+            voices = synth.getVoices();
             
-            // Belgilar
-            charCount.innerText = text.length;
+            // Ro'yxatni tozalash
+            voiceSelect.innerHTML = '';
 
-            // So'zlar
-            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-            wordCount.innerText = words;
-
-            // Gaplar (., !, ? bilan tugagan)
-            const sentences = text.trim() === '' ? 0 : text.split(/[.!?]+/).filter(Boolean).length;
-            sentenceCount.innerText = sentences;
-
-            // O'qish vaqti (o'rtacha 200 so'z/daqiqada)
-            const seconds = Math.ceil(words / 3.3); // 200 so'z / 60 sek ~ 3.3
-            readingTime.innerText = seconds + " sek";
-        }
-
-        function toUpperCase() {
-            textInput.value = textInput.value.toUpperCase();
-            updateStats();
-        }
-
-        function toLowerCase() {
-            textInput.value = textInput.value.toLowerCase();
-            updateStats();
-        }
-
-        function clearText() {
-            if(confirm("Tozalansinmi?")) {
-                textInput.value = "";
-                updateStats();
+            // Har bir ovoz uchun option yaratish
+            voices.forEach(voice => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.setAttribute('data-lang', voice.lang);
+                option.setAttribute('data-name', voice.name);
+                voiceSelect.appendChild(option);
+            });
+            
+            // Agar ovozlar bo'lmasa
+            if(voices.length === 0){
+                 const option = document.createElement('option');
+                 option.textContent = "Ovozlar topilmadi (Brauzer sozlamalarini tekshiring)";
+                 voiceSelect.appendChild(option);
             }
         }
 
-        function copyText() {
-            textInput.select();
-            document.execCommand('copy');
-            alert("Nusxa olindi!");
+        // Brauzerlar ovozlarni har xil vaqtda yuklaydi
+        getVoices();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = getVoices;
         }
 
-        function textToSpeech() {
-            const text = textInput.value;
-            if (!text) return;
-            
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                // Ovozni sozlash (agar mavjud bo'lsa)
-                // utterance.lang = 'uz-UZ'; // Brauzer qo'llab quvvatlasa
-                window.speechSynthesis.speak(utterance);
+        // O'qish funksiyasi
+        const speak = () => {
+            // Agar allaqachon gapirayotgan bo'lsa
+            if (synth.speaking) {
+                console.error('Allaqachon gapirmoqda...');
+                return;
+            }
+
+            if (textInput.value !== '') {
+                // Animatsiyani yoqish
+                statusIcon.classList.remove('hidden');
+
+                const speakText = new SpeechSynthesisUtterance(textInput.value);
+                
+                // Tanlangan ovozni topish
+                const selectedVoice = voiceSelect.selectedOptions[0].getAttribute('data-name');
+                voices.forEach(voice => {
+                    if (voice.name === selectedVoice) {
+                        speakText.voice = voice;
+                    }
+                });
+
+                // Tezlik va Tonni sozlash
+                speakText.rate = rate.value;
+                speakText.pitch = pitch.value;
+
+                // Tugagandan keyingi hodisa
+                speakText.onend = e => {
+                    console.log('O\'qish tugadi');
+                    statusIcon.classList.add('hidden');
+                };
+
+                // Xatolik hodisasi
+                speakText.onerror = e => {
+                    console.error('Xatolik yuz berdi');
+                    statusIcon.classList.add('hidden');
+                };
+
+                synth.speak(speakText);
             } else {
-                alert("Brauzeringiz ovozli o'qishni qo'llab quvvatlamaydi.");
+                alert("Iltimos, o'qish uchun matn yozing!");
             }
-        }
+        };
+
+        // Event Listeners (Hodisalar)
+
+        // O'qish tugmasi
+        speakBtn.addEventListener('click', e => {
+            e.preventDefault();
+            if(synth.paused) {
+                synth.resume();
+            } else {
+                speak();
+            }
+        });
+
+        // Pauza tugmasi
+        pauseBtn.addEventListener('click', e => {
+            if(synth.speaking && !synth.paused){
+                synth.pause();
+            }
+        });
+
+        // To'xtatish tugmasi
+        stopBtn.addEventListener('click', e => {
+            if(synth.speaking){
+                synth.cancel();
+                statusIcon.classList.add('hidden');
+            }
+        });
+
+        // Slider qiymatlarini ko'rsatib turish
+        rate.addEventListener('change', e => rateValue.textContent = rate.value);
+        pitch.addEventListener('change', e => pitchValue.textContent = pitch.value);
+
+        // Ovoz o'zgarsa avtomatik o'qishni to'xtatish
+        voiceSelect.addEventListener('change', e => synth.cancel());
 
     </script>
 </body>
 </html>
-
 
